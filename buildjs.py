@@ -11,8 +11,10 @@ import time
 import re
 import subprocess
 import zipfile
-import urllib2
+import urllib.request
+import configparser
 import tempfile
+
 
 CLOSURE_URL = "https://dl.google.com/closure-compiler/compiler-latest.zip"
 CLOSURE_ZIP = "closure.zip"
@@ -24,7 +26,7 @@ def download_closure():
     """Download the latest version of the Closure compiler."""
 
     # Download the zip file
-    source = urllib2.urlopen(CLOSURE_URL)
+    source = urllib.request.urlopen(CLOSURE_URL)
     with open(CLOSURE_ZIP, "wb") as download:
         download.write(source.read())
     source.close()
@@ -39,7 +41,7 @@ def download_closure():
     else:
         sys.stderr.write("Could not locate Closure jar.\n")
         return
-
+        
     # Extract and delete the zip file
     compressed.extract(name, ".")
     compressed.close()
