@@ -16,6 +16,7 @@ import zipfile
 import urllib.request
 
 ROOT = os.path.dirname(__file__)
+
 CLOSURE_URL = "https://dl.google.com/closure-compiler/compiler-latest.zip"
 CLOSURE_PATTERN = r"closure-compiler-v.+\.jar"
 CLOSURE_ZIP = os.path.join(ROOT, "closure.zip")
@@ -70,7 +71,7 @@ def download():
     else:
         sys.stderr.write("Could not locate Closure jar.\n")
         return
-
+        
     # Extract and delete the zip file
     compressed.extract(name, ".")
     compressed.close()
