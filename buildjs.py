@@ -127,8 +127,8 @@ def compiler():
     print("Recompiled at " + time.strftime("%H:%M:%S %p"))
     # Print output
     if out is not None:
-        if out[0]: print(o[0].decode())
-        if out[1]: print(o[1].decode() + "\n", file=sys.stderr)
+        if out[0]: print(out[0].decode())
+        if out[1]: print(out[1].decode() + "\n", file=sys.stderr)
         if out[0] or out[1]: print()
 
 
