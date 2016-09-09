@@ -179,25 +179,28 @@ def main():
         try:
 
             # Check if configuration changed
-            c = os.path.getmtime(CLOSURE_CFG) > cfg
+            c = os.path.getmtime(CLOSURE_CFG)
             if c > cfg:
                 reconfigure()
+                cfg = c
                 print("Reconfigured the compiler!")
-
-            # Search for new or edited files
-            new = {}
-            for path in lines(options["target"]):
-                search(new, path)
-
-            # Recompile if new or edited files
-            o = None
-            if len(new) != len(old):
-                o = compiler()
+                compiler()
+            
             else:
-                for p in new:
-                    if p not in old or new[p] > old[p]:
-                        o = compiler()
-                        break
+
+                # Search for new or edited files
+                new = {}
+                for path in lines(options["target"]):
+                    search(new, path)
+
+                # Recompile if new or edited files
+                if len(new) != len(old):
+                    compiler()
+                else:
+                    for p in new:
+                        if p not in old or new[p] > old[p]:
+                            compiler()
+                            break
 
             old = new
             time.sleep(options["refresh"])
