@@ -127,8 +127,8 @@ def compiler():
     print("Recompiled at " + time.strftime("%H:%M:%S %p"))
     # Print output
     if out is not None:
-        if out[0]: print(o[0].decode())
-        if out[1]: print(o[1].decode() + "\n", file=sys.stderr)
+        if out[0]: print(out[0].decode())
+        if out[1]: print(out[1].decode() + "\n", file=sys.stderr)
         if out[0] or out[1]: print()
 
 
@@ -179,25 +179,28 @@ def main():
         try:
 
             # Check if configuration changed
-            c = os.path.getmtime(CLOSURE_CFG) > cfg
+            c = os.path.getmtime(CLOSURE_CFG)
             if c > cfg:
                 reconfigure()
+                cfg = c
                 print("Reconfigured the compiler!")
-
-            # Search for new or edited files
-            new = {}
-            for path in lines(options["target"]):
-                search(new, path)
-
-            # Recompile if new or edited files
-            o = None
-            if len(new) != len(old):
-                o = compiler()
+                compiler()
+            
             else:
-                for p in new:
-                    if p not in old or new[p] > old[p]:
-                        o = compiler()
-                        break
+
+                # Search for new or edited files
+                new = {}
+                for path in lines(options["target"]):
+                    search(new, path)
+
+                # Recompile if new or edited files
+                if len(new) != len(old):
+                    compiler()
+                else:
+                    for p in new:
+                        if p not in old or new[p] > old[p]:
+                            compiler()
+                            break
 
             old = new
             time.sleep(options["refresh"])
