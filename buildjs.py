@@ -15,14 +15,17 @@ import shlex
 import zipfile
 import urllib.request
 
-ROOT = os.path.dirname(__file__)
+ROOT = os.path.dirname(os.path.abspath(__file__))
 
 CLOSURE_URL = "https://dl.google.com/closure-compiler/compiler-latest.zip"
 CLOSURE_PATTERN = r"closure-compiler-v.+\.jar"
 CLOSURE_ZIP = os.path.join(ROOT, "closure.zip")
 CLOSURE_JAR = os.path.join(ROOT, "closure.jar")
-CLOSURE_CFG = os.path.join(ROOT, "closure.cfg")
+CLOSURE_CFG = os.path.join(os.path.dirname(ROOT), "closure.cfg")
 CLOSURE_ARGS = ["java", "-jar", CLOSURE_JAR]
+
+# Should be running in the parent directory
+os.chdir(os.path.dirname(ROOT))
 
 CLOSURE_OPTIONS = """\
 # BuildJS configuration
@@ -166,10 +169,10 @@ def main():
         recompile()
 
     if "--js" not in options["arguments"]:
-        print("No Javascript files specified!\n", sys.stderr)
+        print("No Javascript files specified!\n", file=sys.stderr)
         return
     elif "--js_output_file" not in options["arguments"]:
-        print("No Javascript output file specified!\n", sys.stderr)
+        print("No Javascript output file specified!\n", file=sys.stderr)
         return
 
     old = {}
