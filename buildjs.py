@@ -49,7 +49,7 @@ options = {
 def lines(string):
     """Crossplatform split lines."""
 
-    return re.split(r"\r\n?|\n", string)
+    return re.split(r"\s", string)
 
 
 def download():
