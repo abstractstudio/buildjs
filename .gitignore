@@ -2,3 +2,4 @@ closure.cfg
 closure.jar
 .DS_Store
 __pycache__
+.idea/
