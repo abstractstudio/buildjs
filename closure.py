@@ -2,86 +2,93 @@
 
 import colorama
 import subprocess
+import command
 
 
-class Argument:
-    """A command line argument container class."""
+class Closure(command.Command):
+    """A wrapper for a call to the Closure compiler.
 
-    def __init__(self, name, value=None):
-        """Initialize a new argument."""
-
-        self.name = name
-        self.value = None
-        self.set(value)
-
-    def __str__(self):
-        """Convert the argument to a string."""
-
-        return "--%s %s" % (self.name, self.value)
-
-    def set(self, value):
-        """Set the value of the argument."""
-
-        self.value = value
-
-    def get(self):
-        """Get the value of the argument."""
-
-        return self.value
-
-
-class Arguments:
-    """Argument manager for the compilation call."""
-
-    def __init__(self):
-        """Initialize a new arguments manager."""
-
-        self._ = []
-
-    def __iadd__(self, argument):
-        """Override mutating addition"""
-
-        if not isinstance(argument, Argument):
-            raise TypeError("Object must be argument.")
-        self._.append(argument)
-
-    def get(self):
-        """Get the argument list."""
-
-        return self._
-
-
-class Compilation:
-    """A wrapper for a call to the compiler."""
+    --compilation_level                 value
+    --env                               value
+    --externs                           value
+    --js                                multiple
+    --js_output_file                    value
+    --language_in                       value
+    --language_out                      value
+    --warning_level                     value
+    --conformance_configs               value
+    --extra_annotation_name             value
+    --hide_warnings_for                 multiple
+    --jscomp_error                      multiple
+    --jscomp_off                        multiple
+    --jscomp_warning                    multiple
+    --new_type_inf                      flag
+    --warnings_whitelist_file           value
+    --assume_function_wrapper           flag
+    --export_local_property_definitions flag
+    --formatting                        value
+    --generate_exports                  flag
+    --output_wrapper                    value
+    --output_wrapper_file               value
+    --dependency_mode                   value
+    --entry_point                       value
+    --js_module_root                    value
+    --process_common_js_modules         flag
+    --transform_amd_modules             flag
+    --angular_pass                      flag
+    --dart_pass                         flag
+    --polymer_pass                      flag
+    --process_closure_primitives        flag
+    --rewrite_polyfills                 flag
+    --module                            multiple
+    --module_output_path_prefix         multiple
+    --module_wrapper                    value
+    --create_source_map                 value
+    --output_manifest                   value
+    --output_module_dependencies        value
+    --property_renaming_report          value
+    --source_map_location_mapping       value
+    --variable_renaming_report          value
+    --charset                           value
+    --checks_only                       flag
+    --define                            multiple
+    --third_party                       flag
+    --use_types_for_optimization        flag
+    """
 
     def __init__(self):
         """Initialize a new Closure compilation."""
 
-        self.arguments = Arguments()
+        super().__init__("closure.jar")
 
     def argument(self, name, value):
         """Add an argument to the compilation."""
 
-        self.arguments += Argument(name, value)
+        if name not in self.arguments:
+            raise TypeError(format("Invalid option '{}'", name))
+        self.arguments[name].set(value)
 
     def target(self, entry, output):
         """Set the target for the compilation."""
 
-        self.arguments += Argument("entry_point", entry)
-        self.arguments += Argument("js_output_file", output)
+        self.arguments["entry_point"].set(entry)
+        self.arguments["js_output_file"].set(output)
 
     def source(self, path):
         """Add a source to the compiler."""
 
-        self.arguments += Argument("js", path)
+        self.arguments["js"].add(path)
 
     def ignore(self, path):
         """Ignore a source during compilation."""
 
-        self.arguments += Argument("js", "!" + path)
+        self.arguments["js"].add(path)
 
     def execute(self):
         """Execute compilation."""
+
+        print(self.executable, self.arguments.get())
+        return
 
         popen = subprocess.Popen(
             self.arguments.get(),
@@ -90,20 +97,20 @@ class Compilation:
         return popen.communicate()
 
 
-class ClosureArgumentError(BaseException):
-    """Raised when there is an issue in the configuration."""
+class ClosureError(BaseException):
+    """An error in the Closure compiler command."""
 
 
-def compiler(instructions):
+def closure(instructions):
     """Run compilations based on instructions."""
 
     for target in instructions["targets"]:
-        compilation = Compilation()
+        compilation = Closure()
 
         if not ("entry" in target and "output" in target):
-            raise ClosureArgumentError("Target must define an entry and output file.")
+            raise ClosureError("Target must define an entry and output file.")
         if not (isinstance(target["entry"], str) and isinstance(target["output"], str)):
-            raise ClosureArgumentError("Entry and output must be strings.")
+            raise ClosureError("Entry and output must be strings.")
         compilation.target(target["entry"], target["output"])
 
         if "override" in target:
@@ -115,7 +122,9 @@ def compiler(instructions):
                 for path in target["entry"]:
                     compilation.source(path)
             else:
-                raise ClosureArgumentError("Cannot parse override.")
+                raise ClosureError("Cannot parse override.")
+
+        compilation.execute()
 
         # do all sources
         # add all other arguments
