@@ -3,6 +3,7 @@
 import colorama
 import subprocess
 import command
+import yaml
 
 
 class Closure(command.Command):
@@ -61,6 +62,11 @@ class Closure(command.Command):
 
         super().__init__("closure.jar")
 
+    def __getitem__(self, item):
+        """Get an argument from the argument list."""
+
+        return self.arguments[item]
+
     def argument(self, name, value):
         """Add an argument to the compilation."""
 
@@ -82,16 +88,15 @@ class Closure(command.Command):
     def ignore(self, path):
         """Ignore a source during compilation."""
 
-        self.arguments["js"].add(path)
+        self.arguments["js"].add("!" + path)
 
     def execute(self):
         """Execute compilation."""
 
-        print(self.executable, self.arguments.get())
+        print([self.executable] + self.arguments.get())
         return
-
         popen = subprocess.Popen(
-            self.arguments.get(),
+            None,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
         return popen.communicate()
@@ -113,16 +118,29 @@ def closure(instructions):
             raise ClosureError("Entry and output must be strings.")
         compilation.target(target["entry"], target["output"])
 
+        ignore = [target["entry"] for target in instructions["targets"]]
+        ignore.remove(target["entry"])
         if "override" in target:
-            if target["entry"] == "all":
-                pass
-            elif isinstance(target["entry"], str):
-                compilation.source(target["entry"])
-            elif isinstance(target["entry"], list):
-                for path in target["entry"]:
-                    compilation.source(path)
+            if target["override"] == "all":
+                ignore.clear()
+            elif isinstance(target["override"], list):
+                for path in target["override"]:
+                    if path in ignore:
+                        ignore.remove(path)
+                    else:
+                        raise ClosureError("Override is only for including other targets.")
             else:
-                raise ClosureError("Cannot parse override.")
+                raise ClosureError("Cannot parse override, must be list.")
+
+        print(instructions["source"])
+        for source in instructions["source"]:
+            compilation.source(source)
+        for source in instructions["ignore"] + ignore:
+            compilation.ignore(source)
+
+        arguments = {k: v for d in instructions["arguments"] for k, v in d.items()}
+        for argument in arguments:
+            compilation.argument(argument, arguments[argument])
 
         compilation.execute()
 
@@ -130,3 +148,9 @@ def closure(instructions):
         # add all other arguments
 
 
+def build(file):
+    """Build directly from a file."""
+
+    with open(file) as f:
+        instructions = yaml.load(f)
+    closure(instructions)

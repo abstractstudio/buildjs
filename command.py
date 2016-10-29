@@ -10,7 +10,7 @@ class Argument:
         """Initialize a new argument with its name."""
 
         self.prefix = name[:len(name) - len(name.lstrip("-"))]
-        self.name = name.lstrip("--")
+        self.name = name.lstrip("-")
 
 
 class ValueArgument(Argument):
@@ -119,6 +119,11 @@ class Arguments:
         """Return a argument by its name."""
 
         return self.arguments[item]
+
+    def __contains__(self, item):
+        """Check if an argument name is in the argument list."""
+
+        return item in self.arguments
 
     def add(self, argument):
         """Override mutating addition"""
