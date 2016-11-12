@@ -6,9 +6,9 @@ targets:
     override:
       - src/example.js
 source:
-  - src/**.js
+  - src/**/*.js
 ignore:
-  - src/**_ignore.js
+  - src/**/*_ignore.js
 arguments:
-  - language_out: ES5
-  - language_in: ES6
+  --language_out: ES5
+  --language_in: ES6
