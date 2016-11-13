@@ -12,6 +12,12 @@ CLOSURE_NAME = "closure.jar"
 CLOSURE_PATH = os.path.join(ROOT, CLOSURE_NAME)
 
 
+def matches_any(path, patterns):
+    """Check if a path matches any patterns."""
+
+    return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
+
+
 class ClosureBuild:
     """Wrapper class for the closure compiler."""
 
@@ -19,38 +25,36 @@ class ClosureBuild:
         """Initialize a new closue build."""
 
         self.path = os.path.abspath(path)
-        self.entry = None
-        self.output = None
-        self.source = set()
-        self.ignore = set()
+        self.entry_path = None
+        self.output_path = None
+        self.source_patterns = set()
+        self.ignore_patterns = set()
         self.options = []
 
     def __repr__(self):
         """Return a string representation of the build."""
 
-        return "Build[{}=>{}]".format(self.entry, self.output)
+        return "Build[{}=>{}]".format(self.entry_path, self.output_path)
 
     def set_target(self, entry, output):
         """Set the build target."""
 
-        self.entry = entry
-        self.output = output
+        self.entry_path = entry
+        self.output_path = output
 
-    def add_source(self, path):
+    def add_source_pattern(self, path):
         """Add source files. Can be a glob."""
 
         if not os.path.isabs(path):
             path = os.path.abspath(os.path.join(self.path, path))
-        for _ in glob.glob(path, recursive=True):
-            self.source.add(_)
+        self.source_patterns.add(path)
 
-    def add_ignore(self, path):
+    def add_ignore_pattern(self, path):
         """Add ignore files. Can be a glob."""
 
         if not os.path.isabs(path):
             path = os.path.abspath(os.path.join(self.path, path))
-        for _ in glob.glob(path, recursive=True):
-            self.ignore.add(_)
+        self.ignore_patterns.add(path)
 
     def add_option(self, name, value):
         """Add a custom option to be build."""
@@ -60,18 +64,20 @@ class ClosureBuild:
     def includes_file(self, path):
         """Check if a build includes a file."""
 
-        return os.path.abspath(path) in self.source - self.ignore
+        path = os.path.abspath(path)
+        return (matches_any(path, self.source_patterns) and
+                not matches_any(path, self.ignore_patterns))
 
     def arguments(self):
         """Execute the build command."""
 
         arguments = ["java", "-jar", self.path]
-        arguments.extend(("--entry_point", self.entry))
-        arguments.extend(("--js_output_file", self.output))
-        for source in self.source - self.ignore:
+        arguments.extend(("--entry_point", self.entry_path))
+        arguments.extend(("--js_output_file", self.output_path))
+        source_files = glob.glob(*list(self.source_patterns))
+        ignore_files = glob.glob(*list(self.ignore_patterns))
+        for source in source_files - ignore_files:
             arguments.extend(("--js", source))
-        for ignore in self.ignore:
-            arguments.extend(("--js", "!" + ignore))
         for option in self.options:
             arguments.extend(option)
         return arguments
@@ -79,6 +85,8 @@ class ClosureBuild:
     def execute(self):
         """Execute the Closure compilation."""
 
+        if not os.path.exists(self.entry_path):
+            return None
         popen = subprocess.Popen(
             self.arguments(),
             stdout=subprocess.PIPE,
@@ -118,9 +126,9 @@ def closure(file, path="."):
                         ignore.remove(path)
 
         for source in instructions["source"]:
-            build.add_source(source)
+            build.add_source_pattern(source)
         for source in instructions["ignore"] + ignore:
-            build.add_ignore(source)
+            build.add_ignore_pattern(source)
 
         for argument in instructions["arguments"]:
             build.add_option(argument, instructions["arguments"][argument])

@@ -93,23 +93,31 @@ def check_configuration():
 def load_configuration():
     """Load the command line arguments."""
 
-    instructions = closure.closure(BUILD_CONFIG)
-    if len(instructions) == 0:
+    builds = closure.closure(BUILD_CONFIG)
+    if len(builds) == 0:
         print(colorama.Fore.RED + "No build targets specified." + colorama.Fore.RESET)
-    return instructions
+    return builds
 
 
 class BuildHandler(watchdog.events.FileSystemEventHandler):
     """An automatic build tool that monitors the file system."""
 
-    def on_created(self, event):
+    def __init__(self):
+        """Initialize the build handler."""
 
+        super().__init__()
+        self.builds = load_configuration()
+
+    def on_any_event(self, event: watchdog.events.FileSystemMovedEvent):
+        for build in self.builds:
+            if build.includes_file(event.src_path):
+                print("Rebuilding " + build.output_path)
 
 
 def main():
     """Loop recompilation or configuration as needed."""
 
-
+    pass
 
 
 if __name__ == "__main__":
