@@ -1,8 +1,8 @@
 """A Python 3 wrapper for Google's Closure compiler."""
 
-import colorama
 import subprocess
 import glob
+import fnmatch
 import yaml
 import os
 
@@ -65,7 +65,7 @@ class ClosureBuild:
     def arguments(self):
         """Execute the build command."""
 
-        arguments = [self.path]
+        arguments = ["java", "-jar", self.path]
         arguments.extend(("--entry_point", self.entry))
         arguments.extend(("--js_output_file", self.output))
         for source in self.source - self.ignore:
@@ -96,7 +96,14 @@ def closure(file, path="."):
     with open(file) as f:
         instructions = yaml.load(f)
 
-    for target in instructions["targets"]:
+    instructions["targets"] = instructions["targets"] or []
+    instructions["source"] = instructions["source"] or []
+    instructions["ignore"] = instructions["ignore"] or []
+    instructions["arguments"] = instructions["arguments"] or {}
+
+    builds = []
+
+    for target in (instructions["targets"]):
 
         build = ClosureBuild(path)
         build.set_target(target["entry"], target["output"])
@@ -118,4 +125,6 @@ def closure(file, path="."):
         for argument in instructions["arguments"]:
             build.add_option(argument, instructions["arguments"][argument])
 
-        yield build
+        builds.append(build)
+
+    return builds
