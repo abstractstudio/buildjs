@@ -143,12 +143,11 @@ def main():
         handles.append(observer.schedule(handler, path, recursive=True))
     observer.start()
 
-    def stop(s, f):
-        observer.stop()
-        print("Exiting.")
-
-    signal.signal(signal.SIGINT, stop)
-    signal.pause()
+    while True:
+        try:
+            time.sleep(0.5)
+        except KeyboardInterrupt:
+            break
 
 
 if __name__ == "__main__":
