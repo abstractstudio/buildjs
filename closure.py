@@ -81,7 +81,7 @@ class ClosureBuild:
     def arguments(self):
         """Execute the build command."""
 
-        arguments = ["java", "-jar", self.path]
+        arguments = ["java", "-jar", CLOSURE_PATH]
         arguments.extend(("--entry_point", self.entry_path))
         arguments.extend(("--js_output_file", self.output_path))
         source_files = glob_all(self.source_patterns)
