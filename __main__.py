@@ -28,14 +28,8 @@ CLOSURE_URL = "https://dl.google.com/closure-compiler/compiler-latest.zip"
 CLOSURE_PATTERN = r"closure-compiler-v.+\.jar"
 CLOSURE_ZIP = os.path.join(ROOT, "closure.zip")
 CLOSURE_JAR = os.path.join(ROOT, "closure.jar")
+DEFAULT_CONFIG = os.path.join(ROOT, "default.yaml")
 BUILD_CONFIG = os.path.join(TARGET, "build.yaml")
-
-CLOSURE_OPTIONS = """\
-targets:
-source:
-ignore:
-arguments:
-"""
 
 
 def download_closure():
@@ -80,8 +74,9 @@ def check_closure():
 def write_configuration():
     """Create the custom configuration."""
 
-    with open(BUILD_CONFIG, "w") as file:
-        file.write(CLOSURE_OPTIONS)
+    with open(BUILD_CONFIG, "w") as write:
+        with open(DEFAULT_CONFIG) as read:
+            write.write(read.read())
 
 
 def check_configuration():
@@ -132,7 +127,7 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
         print("Detected rebuild for {}".format(self.build.output_path))
         print("- " + colorama.Fore.GREEN + event.src_path + colorama.Fore.RESET)
         print("Building...")
-        #self.build.execute()
+        self.build.execute()
         print("Done at {}!\n".format(time.strftime("%H:%M:%S %p")))
 
 
