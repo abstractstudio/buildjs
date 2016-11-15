@@ -13,6 +13,7 @@ import zipfile
 import urllib.request
 import watchdog.events
 import watchdog.observers
+import signal
 import time
 import closure
 
@@ -20,13 +21,14 @@ import closure
 colorama.init()
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+TARGET = os.path.abspath(os.getcwd())
 sys.path.append(ROOT)
 
 CLOSURE_URL = "https://dl.google.com/closure-compiler/compiler-latest.zip"
 CLOSURE_PATTERN = r"closure-compiler-v.+\.jar"
 CLOSURE_ZIP = os.path.join(ROOT, "closure.zip")
 CLOSURE_JAR = os.path.join(ROOT, "closure.jar")
-BUILD_CONFIG = os.path.join(os.path.dirname(ROOT), "closure.cfg")
+BUILD_CONFIG = os.path.join(TARGET, "build.yaml")
 
 CLOSURE_OPTIONS = """\
 targets:
@@ -101,27 +103,59 @@ def load_configuration():
     return builds
 
 
+def common_path(paths):
+    """Get the common path among a list of paths."""
+
+    path = os.path.abspath(os.path.commonpath(paths))
+    parts = path.split(os.sep)[1:]
+    for i in range(len(parts)):
+        if "*" in parts[i]:
+            return "/" + os.path.join(*parts[:i])
+    return "/" + path
+
+
 class BuildHandler(watchdog.events.FileSystemEventHandler):
     """An automatic build tool that monitors the file system."""
 
-    def __init__(self):
+    def __init__(self, build: closure.ClosureBuild):
         """Initialize the build handler."""
 
         super().__init__()
-        self.builds = load_configuration()
+        self.build = build
 
-    def on_any_event(self, event: watchdog.events.FileSystemMovedEvent):
-        for build in self.builds:
-            if build.includes_file(event.src_path):
-                print("Rebuilding " + build.output_path)
+    def on_modified(self, event: watchdog.events.FileSystemMovedEvent):
+        """Called when a file in the system is modified."""
+
+        if not self.build.includes_file(event.src_path):
+            return
+
+        print("Detected rebuild for {}".format(self.build.output_path))
+        print("- " + colorama.Fore.GREEN + event.src_path + colorama.Fore.RESET)
+        print("Building...")
+        #self.build.execute()
+        print("Done at {}!\n".format(time.strftime("%H:%M:%S %p")))
 
 
 def main():
     """Loop recompilation or configuration as needed."""
 
-    handler = BuildHandler()
+    handles = []
     observer = watchdog.observers.Observer()
+    builds = load_configuration()
+    for build in builds:
+        handler = BuildHandler(build)
+        path = common_path(list(build.source_patterns))
+        handles.append(observer.schedule(handler, path, recursive=True))
+    observer.start()
+
+    def stop(s, f):
+        observer.stop()
+        print("Exiting.")
+
+    signal.signal(signal.SIGINT, stop)
+    signal.pause()
 
 
 if __name__ == "__main__":
+    print()
     main()

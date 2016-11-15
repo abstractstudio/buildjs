@@ -18,6 +18,15 @@ def matches_any(path, patterns):
     return any(fnmatch.fnmatch(path, pattern) for pattern in patterns)
 
 
+def glob_all(paths):
+    """Glob multiple paths together into a set."""
+
+    total = set()
+    for path in paths:
+        total = total | set(glob.glob(path, recursive=True))
+    return total
+
+
 class ClosureBuild:
     """Wrapper class for the closure compiler."""
 
@@ -39,8 +48,8 @@ class ClosureBuild:
     def set_target(self, entry, output):
         """Set the build target."""
 
-        self.entry_path = entry
-        self.output_path = output
+        self.entry_path = os.path.abspath(entry)
+        self.output_path = os.path.abspath(output)
 
     def add_source_pattern(self, path):
         """Add source files. Can be a glob."""
@@ -66,7 +75,8 @@ class ClosureBuild:
 
         path = os.path.abspath(path)
         return (matches_any(path, self.source_patterns) and
-                not matches_any(path, self.ignore_patterns))
+                not matches_any(path, self.ignore_patterns) or
+                path == self.entry_path)
 
     def arguments(self):
         """Execute the build command."""
@@ -74,8 +84,8 @@ class ClosureBuild:
         arguments = ["java", "-jar", self.path]
         arguments.extend(("--entry_point", self.entry_path))
         arguments.extend(("--js_output_file", self.output_path))
-        source_files = glob.glob(*list(self.source_patterns))
-        ignore_files = glob.glob(*list(self.ignore_patterns))
+        source_files = glob_all(self.source_patterns)
+        ignore_files = glob_all(self.ignore_patterns)
         for source in source_files - ignore_files:
             arguments.extend(("--js", source))
         for option in self.options:
