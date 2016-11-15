@@ -138,6 +138,7 @@ def main():
     observer = watchdog.observers.Observer()
     builds = load_configuration()
     for build in builds:
+        build.execute()
         handler = BuildHandler(build)
         path = common_path(list(build.source_patterns))
         handles.append(observer.schedule(handler, path, recursive=True))
