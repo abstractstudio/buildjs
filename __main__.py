@@ -116,9 +116,9 @@ def execute_and_print(build):
     if result is None:
         return
     if result[0]:
-        print(colorama.Fore.GREEN + result[0] + colorama.Fore.RESET)
+        print(colorama.Fore.GREEN + result[0].decode() + colorama.Fore.RESET)
     if result[1]:
-        print(colorama.Fore.RED + result[1] + colorama.Fore.RESET)
+        print(colorama.Fore.RED + result[1].decode() + colorama.Fore.RESET)
 
 
 class BuildHandler(watchdog.events.FileSystemEventHandler):
