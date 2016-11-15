@@ -109,7 +109,6 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
 
         super().__init__()
         self.builds = load_configuration()
-        self.observer = watchdog.observers.Observer()
 
     def on_any_event(self, event: watchdog.events.FileSystemMovedEvent):
         for build in self.builds:
@@ -120,7 +119,8 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
 def main():
     """Loop recompilation or configuration as needed."""
 
-    pass
+    handler = BuildHandler()
+    observer = watchdog.observers.Observer()
 
 
 if __name__ == "__main__":
