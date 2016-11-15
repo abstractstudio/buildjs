@@ -86,7 +86,7 @@ class ClosureBuild:
         arguments.extend(("--js_output_file", self.output_path))
         source_files = glob_all(self.source_patterns)
         ignore_files = glob_all(self.ignore_patterns)
-        for source in source_files - ignore_files:
+        for source in source_files - ignore_files | {self.entry_path}:
             arguments.extend(("--js", source))
         for option in self.options:
             arguments.extend(option)
