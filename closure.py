@@ -114,10 +114,10 @@ def closure(file, path="."):
     with open(file) as f:
         instructions = yaml.load(f)
 
-    instructions["targets"] = instructions["targets"] or []
-    instructions["source"] = instructions["source"] or []
-    instructions["ignore"] = instructions["ignore"] or []
-    instructions["arguments"] = instructions["arguments"] or {}
+    instructions["targets"] = instructions.get("targets", [])
+    instructions["source"] = instructions.get("source", [])
+    instructions["ignore"] = instructions.get("ignore", [])
+    instructions["arguments"] = instructions.get("arguments", {})
 
     builds = []
 
