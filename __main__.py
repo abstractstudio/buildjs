@@ -109,6 +109,18 @@ def common_path(paths):
     return "/" + path
 
 
+def execute_and_print(build):
+    """Run a build and print the results."""
+
+    result = build.execute()
+    if result is None:
+        return
+    if result[0]:
+        print(colorama.Fore.GREEN + result[0] + colorama.Fore.RESET)
+    if result[1]:
+        print(colorama.Fore.RED + result[1] + colorama.Fore.RESET)
+
+
 class BuildHandler(watchdog.events.FileSystemEventHandler):
     """An automatic build tool that monitors the file system."""
 
@@ -127,18 +139,21 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
         print("Detected rebuild for {}".format(self.build.output_path))
         print("- " + colorama.Fore.GREEN + event.src_path + colorama.Fore.RESET)
         print("Building...")
-        self.build.execute()
+        execute_and_print(self.build)
         print("Done at {}!\n".format(time.strftime("%H:%M:%S %p")))
 
 
 def main():
     """Loop recompilation or configuration as needed."""
 
+    check_closure()
+    check_configuration()
+
     handles = []
     observer = watchdog.observers.Observer()
     builds = load_configuration()
     for build in builds:
-        build.execute()
+        execute_and_print(build)
         handler = BuildHandler(build)
         path = common_path(list(build.source_patterns))
         handles.append(observer.schedule(handler, path, recursive=True))
