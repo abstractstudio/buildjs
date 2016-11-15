@@ -127,7 +127,7 @@ def closure(file, path="."):
 
         for source in instructions["source"]:
             build.add_source_pattern(source)
-        for source in instructions["ignore"] + ignore:
+        for source in instructions.get("ignore", []) + ignore:
             build.add_ignore_pattern(source)
 
         for argument in instructions["arguments"]:

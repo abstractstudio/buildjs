@@ -12,6 +12,8 @@ import re
 import zipfile
 import urllib.request
 import watchdog.events
+import watchdog.observers
+import time
 import closure
 
 
@@ -107,6 +109,7 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
 
         super().__init__()
         self.builds = load_configuration()
+        self.observer = watchdog.observers.Observer()
 
     def on_any_event(self, event: watchdog.events.FileSystemMovedEvent):
         for build in self.builds:
