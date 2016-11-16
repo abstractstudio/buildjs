@@ -34,7 +34,7 @@ class ClosureBuild:
         """Initialize a new closue build."""
 
         self.path = os.path.abspath(path)
-        self.entry_path = None
+        self.entry_point = None
         self.output_path = None
         self.source_patterns = set()
         self.ignore_patterns = set()
@@ -43,12 +43,12 @@ class ClosureBuild:
     def __repr__(self):
         """Return a string representation of the build."""
 
-        return "Build[{}=>{}]".format(self.entry_path, self.output_path)
+        return "Build[{}=>{}]".format(self.entry_point, self.output_path)
 
     def set_target(self, entry, output):
         """Set the build target."""
 
-        self.entry_path = os.path.abspath(entry)
+        self.entry_point = entry
         self.output_path = os.path.abspath(output)
 
     def add_source_pattern(self, path):
@@ -75,18 +75,17 @@ class ClosureBuild:
 
         path = os.path.abspath(path)
         return (matches_any(path, self.source_patterns) and
-                not matches_any(path, self.ignore_patterns) or
-                path == self.entry_path)
+                not matches_any(path, self.ignore_patterns))
 
     def arguments(self):
         """Execute the build command."""
 
         arguments = ["java", "-jar", CLOSURE_PATH]
-        arguments.extend(("--entry_point", self.entry_path))
+        arguments.extend(("--entry_point", self.entry_point))
         arguments.extend(("--js_output_file", self.output_path))
         source_files = glob_all(self.source_patterns)
         ignore_files = glob_all(self.ignore_patterns)
-        for source in source_files - ignore_files | {self.entry_path}:
+        for source in source_files - ignore_files:
             arguments.extend(("--js", source))
         for option in self.options:
             arguments.extend(option)
@@ -95,7 +94,7 @@ class ClosureBuild:
     def execute(self):
         """Execute the Closure compilation."""
 
-        if not os.path.exists(self.entry_path):
+        if not os.path.exists(self.entry_point):
             return None
         popen = subprocess.Popen(
             self.arguments(),
