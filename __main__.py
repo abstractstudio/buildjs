@@ -29,7 +29,7 @@ CLOSURE_PATTERN = r"closure-compiler-v.+\.jar"
 CLOSURE_ZIP = os.path.join(ROOT, "closure.zip")
 CLOSURE_JAR = os.path.join(ROOT, "closure.jar")
 DEFAULT_CONFIG = os.path.join(ROOT, "default.yaml")
-BUILD_CONFIG = os.path.join(TARGET, "build.yaml")
+BUILD_CONFIG = os.path.join(TARGET, "closure.yaml")
 
 
 def download_closure():
@@ -110,7 +110,8 @@ def common_path(paths):
 def execute_and_print(build):
     """Run a build and print the results."""
 
-    print("Building...")
+    name = os.path.split(build.output_path)[1]
+    print("Building {}...".format(name))
     result = build.execute()
     if result[0]:
         print(colorama.Fore.GREEN + result[0].decode() + colorama.Fore.RESET)
@@ -140,8 +141,7 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
         if not self.build.includes_file(event.src_path):
             return
 
-        name = os.path.split(self.build.output_path)[1]
-        print("Detected rebuild for {}".format(name))
+        print("Detected modified file:")
         print(colorama.Fore.GREEN + os.path.abspath(event.src_path) + colorama.Fore.RESET)
         execute_and_print(self.build)
 
