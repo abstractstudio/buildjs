@@ -128,14 +128,16 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
 
         super().__init__()
         self.build = build
-        self.cooldown = 0.5 * 1000
+        self.cooldown = 0.0 * 1000
         self.last_build = 0
 
     def on_modified(self, event: watchdog.events.FileSystemMovedEvent):
         """Called when a file in the system is modified."""
 
         if time.time() - self.last_build < self.cooldown:
+            print("Cooling down.")
             return
+        
         self.last_build = time.time()
 
         if not self.build.includes_file(event.src_path):
