@@ -23,6 +23,7 @@ def glob_all(paths):
 
     total = set()
     for path in paths:
+        path = path.replace("**", "**" + os.sep + "*")
         total = total | set(glob.glob(path, recursive=True))
     return total
 
@@ -94,8 +95,6 @@ class ClosureBuild:
     def execute(self):
         """Execute the Closure compilation."""
 
-        if not os.path.exists(self.entry_point):
-            return None
         popen = subprocess.Popen(
             self.arguments(),
             stdout=subprocess.PIPE,

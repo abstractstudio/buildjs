@@ -68,7 +68,6 @@ def check_closure():
     if not os.path.isfile(CLOSURE_JAR):
         print(colorama.Fore.GREEN + "Downloading closure..." + colorama.Fore.RESET)
         download_closure()
-    return 0
 
 
 def write_configuration():
@@ -86,7 +85,6 @@ def check_configuration():
         print("Creating config file...")
         print(colorama.Fore.RED + "No configuration!" + colorama.Fore.RESET)
         write_configuration()
-        return 1
 
 
 def load_configuration():
@@ -112,13 +110,13 @@ def common_path(paths):
 def execute_and_print(build):
     """Run a build and print the results."""
 
+    print("Building...")
     result = build.execute()
-    if result is None:
-        return
     if result[0]:
         print(colorama.Fore.GREEN + result[0].decode() + colorama.Fore.RESET)
     if result[1]:
         print(colorama.Fore.RED + result[1].decode() + colorama.Fore.RESET)
+    print("Done at {}!\n".format(time.strftime("%H:%M:%S %p")))
 
 
 class BuildHandler(watchdog.events.FileSystemEventHandler):
@@ -129,18 +127,23 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
 
         super().__init__()
         self.build = build
+        self.cooldown = 0.5 * 1000
+        self.last_build = 0
 
     def on_modified(self, event: watchdog.events.FileSystemMovedEvent):
         """Called when a file in the system is modified."""
 
+        if time.time() - self.last_build < self.cooldown:
+            return
+        self.last_build = time.time()
+
         if not self.build.includes_file(event.src_path):
             return
 
-        print("Detected rebuild for {}".format(self.build.output_path))
-        print("- " + colorama.Fore.GREEN + event.src_path + colorama.Fore.RESET)
-        print("Building...")
+        name = os.path.split(self.build.output_path)[1]
+        print("Detected rebuild for {}".format(name))
+        print(colorama.Fore.GREEN + os.path.abspath(event.src_path) + colorama.Fore.RESET)
         execute_and_print(self.build)
-        print("Done at {}!\n".format(time.strftime("%H:%M:%S %p")))
 
 
 def main():
@@ -158,11 +161,13 @@ def main():
         path = common_path(list(build.source_patterns))
         handles.append(observer.schedule(handler, path, recursive=True))
     observer.start()
+    print("Waiting for changes...\n")
 
     while True:
         try:
-            time.sleep(0.5)
+            time.sleep(1)
         except KeyboardInterrupt:
+            observer.stop()
             break
 
 
