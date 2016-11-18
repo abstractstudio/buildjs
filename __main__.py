@@ -132,18 +132,20 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
     def on_any_event(self, event: watchdog.events.FileSystemMovedEvent):
         """Called when a file in the system is modified."""
 
-        if not self.build.includes_file(event.src_path):
+        path = os.path.realpath(event.src_path)
+
+        if not self.build.includes_file(path):
             return
 
-        modify_time = os.stat(event.src_path).st_mtime
-        if event.src_path not in self.cache:
-            self.cache[event.src_path] = modify_time
-        elif modify_time == self.cache[event.src_path]:
+        modify_time = os.stat(path).st_mtime
+        if path not in self.cache:
+            self.cache[path] = modify_time
+        elif modify_time == self.cache[path]:
             print("Already updated.")
             return
 
         print("Detected modified file:")
-        print(colorama.Fore.GREEN + os.path.abspath(event.src_path) + colorama.Fore.RESET)
+        print(colorama.Fore.GREEN + os.path.abspath(path) + colorama.Fore.RESET)
         execute_and_print(self.build)
 
 
