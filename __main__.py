@@ -13,7 +13,6 @@ import zipfile
 import urllib.request
 import watchdog.events
 import watchdog.observers
-import signal
 import time
 import closure
 
@@ -128,19 +127,19 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
 
         super().__init__()
         self.build = build
-        self.cooldown = 0.0 * 1000
-        self.last_build = 0
+        self.cache = {}
 
-    def on_modified(self, event: watchdog.events.FileSystemMovedEvent):
+    def on_any_event(self, event: watchdog.events.FileSystemMovedEvent):
         """Called when a file in the system is modified."""
 
-        if time.time() - self.last_build < self.cooldown:
-            print("Cooling down.")
-            return
-        
-        self.last_build = time.time()
-
         if not self.build.includes_file(event.src_path):
+            return
+
+        modify_time = os.stat(event.src_path).st_mtime
+        if event.src_path not in self.cache:
+            self.cache[event.src_path] = modify_time
+        elif modify_time == self.cache[event.src_path]:
+            print("Already updated.")
             return
 
         print("Detected modified file:")
