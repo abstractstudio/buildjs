@@ -138,9 +138,9 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
             return
 
         modify_time = os.stat(path).st_mtime
-        if path not in self.cache:
+        if path not in self.cache or modify_time > self.cache[path]:
             self.cache[path] = modify_time
-        elif modify_time == self.cache[path]:
+        else:
             print("Already updated.")
             return
 
