@@ -137,8 +137,12 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
         if not self.build.includes_file(path):
             return
 
-        modify_time = os.stat(path).st_mtime
-        if path not in self.cache or modify_time > self.cache[path]:
+        try:
+            modify_time = os.path.getmtime(path)
+        except FileNotFoundError:
+            modify_time = -1
+
+        if modify_time > 0 and (path not in self.cache or modify_time > self.cache[path]):
             self.cache[path] = modify_time
         else:
             print("Already updated.")
