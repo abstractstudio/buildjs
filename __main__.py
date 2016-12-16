@@ -102,8 +102,8 @@ def common_path(paths):
     parts = path.split(os.sep)[1:]
     for i in range(len(parts)):
         if "*" in parts[i]:
-            return "/" + os.path.join(*parts[:i])
-    return "/" + path
+            return os.path.abspath(os.path.join(*parts[:i]))
+    return os.path.abspath(path)
 
 
 def execute_and_print(build):
