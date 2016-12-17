@@ -99,11 +99,11 @@ def common_path(paths):
     """Get the common path among a list of paths."""
 
     path = os.path.abspath(os.path.commonpath(paths))
-    parts = path.split(os.sep)[1:]
+    parts = path.split(os.sep)
     for i in range(len(parts)):
         if "*" in parts[i]:
-            return os.path.abspath(os.path.join(*parts[:i]))
-    return os.path.abspath(path)
+            return os.path.sep.join(parts[:i])
+    return path
 
 
 def execute_and_print(build):
@@ -145,7 +145,7 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
         if modify_time > 0 and (path not in self.cache or modify_time > self.cache[path]):
             self.cache[path] = modify_time
         else:
-            print("Already updated.")
+            #print("Already updated.\n")
             return
 
         print("Detected modified file:")
