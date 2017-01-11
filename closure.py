@@ -32,7 +32,7 @@ class ClosureBuild:
     """Wrapper class for the closure compiler."""
 
     def __init__(self, path):
-        """Initialize a new closue build."""
+        """Initialize a new closure build."""
 
         self.path = os.path.abspath(path)
         self.entry_point = None
@@ -45,6 +45,14 @@ class ClosureBuild:
         """Return a string representation of the build."""
 
         return "Build[{}=>{}]".format(self.entry_point, self.output_path)
+
+    @property
+    def name(self):
+        """Get the name of the build."""
+
+        if self.entry_point:
+            return os.path.basename(self.output_path).split(os.path.extsep)[0]
+        return None
 
     def set_target(self, entry, output):
         """Set the build target."""

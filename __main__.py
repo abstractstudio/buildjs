@@ -14,7 +14,6 @@ import urllib.request
 import watchdog.events
 import watchdog.observers
 import time
-import closure
 
 
 colorama.init()
@@ -22,6 +21,9 @@ colorama.init()
 ROOT = os.path.dirname(os.path.abspath(__file__))
 TARGET = os.path.abspath(os.getcwd())
 sys.path.append(ROOT)
+
+import closure
+
 
 CLOSURE_URL = "https://dl.google.com/closure-compiler/compiler-latest.zip"
 CLOSURE_PATTERN = r"closure-compiler-v.+\.jar"
@@ -153,8 +155,8 @@ class BuildHandler(watchdog.events.FileSystemEventHandler):
         execute_and_print(self.build)
 
 
-def main():
-    """Loop recompilation or configuration as needed."""
+def main_watch():
+    """Loop recompilation as needed."""
 
     check_closure()
     check_configuration()
@@ -178,6 +180,30 @@ def main():
             break
 
 
+def main_manual():
+    """Loop wait for user input to rebuild."""
+
+    check_closure()
+    check_configuration()
+    builds = load_configuration()
+    names = []
+
+    while True:
+        try:
+            print("Builds: " + ", ".join(map(lambda x: x.name, builds)))
+            previous = "({})".format(" ".join(names)) if names else ""
+            names = input(previous + ": ").strip().split() or names
+            for build in builds:
+                if build.name in names:
+                    execute_and_print(build)
+        except KeyboardInterrupt:
+            print()
+            break
+
+
 if __name__ == "__main__":
     print()
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "manual":
+        main_manual()
+    else:
+        main_watch()
