@@ -57,7 +57,7 @@ class ClosureBuild:
     def set_target(self, entry, output):
         """Set the build target."""
 
-        self.entry_point = entry
+        self.entry_point = os.path.abspath(entry)
         self.output_path = os.path.abspath(output)
 
     def add_source_pattern(self, path):

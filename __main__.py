@@ -201,9 +201,24 @@ def main_manual():
             break
 
 
+def main():
+    """Build everything once."""
+
+    check_closure()
+    check_configuration()
+    builds = load_configuration()
+
+    print("Builds: " + ", ".join(map(lambda x: x.name, builds)))
+    for build in builds:
+        execute_and_print(build)
+
+
+
 if __name__ == "__main__":
-    print()
-    if len(sys.argv) > 1 and sys.argv[1] == "manual":
-        main_manual()
-    else:
-        main_watch()
+    if len(sys.argv) == 1:
+        main()
+    elif len(sys.argv) > 1:
+        if sys.argv[1] == "manual":
+            main_manual()
+        elif sys.argv[1] == "watch":
+            main_watch()
